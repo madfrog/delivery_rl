@@ -5,6 +5,7 @@ from gym.spaces import Discrete, Box
 import numpy as np
 import random
 from enum import Enum
+import json
 
 REWARD_NORMAL = 1
 REWARD_COLLISION = -10
@@ -27,7 +28,7 @@ class DeliveryEnv(Env):
         while True:
             self.state = random.sample(range(0, self.cols), 1)[0]
             self.start = self.state
-            if self.spec not in self.obstacles:
+            if self.start not in self.obstacles:
                 break
         # Set destination
         while True:
@@ -37,6 +38,33 @@ class DeliveryEnv(Env):
         # Set package time limit
         self.package_time = random.randint(int((self.dest-self.start)/2), self.cols*self.rows)
         self.time_counter = 0
+
+    def reconstruct_env(self):
+        with open('./freeze_env.json', 'r') as f:
+            info = json.load(f)
+            self.rows = info['rows']
+            self.cols = info['cols']
+            self.observation_space = Discrete(self.rows * self.cols)
+            self.action_space = Discrete(info['action_space'])
+            self.obstacles = info['obstacles']
+            self.start = info['start']
+            self.dest = info['dest']
+            self.package_time = info['timeout']
+
+    def freeze(self):
+        info = {
+            "rows": self.rows,
+            "cols": self.cols,
+            "action_space": 5,
+            "obstacles": self.obstacles,
+            "start": self.start,
+            "dest": self.dest,
+            "timeout": self.package_time
+        }
+        with open('./freeze_env.json', 'w') as f:
+            json.dump(info, f)
+        print('save env to file success!')
+
 
     def __check_edge(self, action):
         # 1. Check if reach the edge, if so, will not move
@@ -148,3 +176,12 @@ class DeliveryEnv(Env):
         self.time_counter = 0
         return self.state
 
+
+if __name__=="__main__":
+    env = DeliveryEnv()
+    env.render()
+
+    print(f'after freeze...')
+    env.freeze()
+    env.reconstruct_env()
+    env.render()
