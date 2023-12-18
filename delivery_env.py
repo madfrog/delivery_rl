@@ -7,7 +7,6 @@ import random
 from enum import Enum
 import json
 
-REWARD_NORMAL = 1
 REWARD_COLLISION = -10
 REWARD_EDGE_OR_STOP = 0
 REWARD_TIMEOUT_EXTRA = -1
